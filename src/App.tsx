@@ -6,6 +6,7 @@ import { Editor } from './components/Editor'
 import { Inspector } from './components/Inspector'
 import { ResizeHandle } from './components/ResizeHandle'
 import { CreateNoteDialog, type NoteType } from './components/CreateNoteDialog'
+import { QuickOpenPalette } from './components/QuickOpenPalette'
 import { isTauri, mockInvoke, addMockEntry } from './mock-tauri'
 import type { VaultEntry, SidebarSelection, GitCommit } from './types'
 import './App.css'
@@ -27,6 +28,7 @@ function App() {
   const [allContent, setAllContent] = useState<Record<string, string>>({})
   const [gitHistory, setGitHistory] = useState<GitCommit[]>([])
   const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [showQuickOpen, setShowQuickOpen] = useState(false)
 
   useEffect(() => {
     const loadVault = async () => {
@@ -81,6 +83,19 @@ function App() {
     }
     loadHistory()
   }, [activeTabPath])
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey
+      if (mod && e.key === 'p') {
+        e.preventDefault()
+        setShowQuickOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const handleSelectNote = useCallback(async (entry: VaultEntry) => {
     // If tab already open, just switch to it
@@ -258,6 +273,12 @@ function App() {
           onNavigate={handleNavigateWikilink}
         />
       </div>
+      <QuickOpenPalette
+        open={showQuickOpen}
+        entries={entries}
+        onSelect={handleSelectNote}
+        onClose={() => setShowQuickOpen(false)}
+      />
       <CreateNoteDialog
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
