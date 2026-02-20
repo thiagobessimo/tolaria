@@ -146,28 +146,42 @@ fn without_h1_line(s: &str) -> Option<&str> {
     None
 }
 
+/// Collect chars until a delimiter, returning the collected string.
+fn collect_until(chars: &mut impl Iterator<Item = char>, delimiter: char) -> String {
+    let mut buf = String::new();
+    for c in chars.by_ref() {
+        if c == delimiter { break; }
+        buf.push(c);
+    }
+    buf
+}
+
+/// Skip all chars until a delimiter (consuming the delimiter).
+fn skip_until(chars: &mut impl Iterator<Item = char>, delimiter: char) {
+    for c in chars.by_ref() {
+        if c == delimiter { break; }
+    }
+}
+
+/// Check if a char is markdown formatting that should be stripped.
+fn is_markdown_formatting(ch: char) -> bool {
+    matches!(ch, '*' | '_' | '`' | '~')
+}
+
 fn strip_markdown_chars(s: &str) -> String {
     let mut result = String::with_capacity(s.len());
     let mut chars = s.chars().peekable();
     while let Some(ch) = chars.next() {
         match ch {
             '[' => {
-                // Collect until ']' — keep inner text
-                let mut inner = String::new();
-                for c in chars.by_ref() {
-                    if c == ']' { break; }
-                    inner.push(c);
-                }
-                // Skip (url) if it follows
+                let inner = collect_until(&mut chars, ']');
                 if chars.peek() == Some(&'(') {
                     chars.next();
-                    for c in chars.by_ref() {
-                        if c == ')' { break; }
-                    }
+                    skip_until(&mut chars, ')');
                 }
                 result.push_str(&inner);
             }
-            '*' | '_' | '`' | '~' => {} // strip these
+            c if is_markdown_formatting(c) => {}
             _ => result.push(ch),
         }
     }
