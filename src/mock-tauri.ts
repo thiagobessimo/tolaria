@@ -442,6 +442,113 @@ Belongs to:
 
 AI agents are autonomous systems that can plan, execute, and adapt to achieve goals.
 `,
+  // --- Type documents ---
+  '/Users/luca/Laputa/type/project.md': `---
+Is A: Type
+---
+
+# Project
+
+A **time-bound initiative** that advances a [[type/responsibility|Responsibility]]. Projects have a clear start, end, and deliverables.
+
+## Properties
+- **Status**: Active, Paused, Done, Dropped
+- **Owner**: The person accountable
+- **Belongs to**: Usually a Quarter or Responsibility
+`,
+  '/Users/luca/Laputa/type/responsibility.md': `---
+Is A: Type
+---
+
+# Responsibility
+
+An **ongoing area of ownership** — something you're accountable for indefinitely. Responsibilities don't end; they have procedures, projects, and measures attached.
+
+## Properties
+- **Status**: Active, Paused, Archived
+- **Owner**: The person accountable
+`,
+  '/Users/luca/Laputa/type/procedure.md': `---
+Is A: Type
+---
+
+# Procedure
+
+A **recurring process** tied to a [[type/responsibility|Responsibility]]. Procedures have a cadence (weekly, monthly) and describe how to do something.
+
+## Properties
+- **Status**: Active, Paused
+- **Owner**: The person responsible
+- **Cadence**: Weekly, Monthly, Quarterly
+- **Belongs to**: A Responsibility
+`,
+  '/Users/luca/Laputa/type/experiment.md': `---
+Is A: Type
+---
+
+# Experiment
+
+A **hypothesis-driven investigation** with a clear test and measurable outcome. Experiments are time-bound and have explicit success criteria.
+
+## Properties
+- **Status**: Active, Done, Dropped
+- **Owner**: The person running the experiment
+`,
+  '/Users/luca/Laputa/type/person.md': `---
+Is A: Type
+---
+
+# Person
+
+A **person** you interact with — team members, collaborators, contacts. People can own projects, responsibilities, and procedures.
+
+## Properties
+- **Aliases**: Alternative names for wikilink resolution
+`,
+  '/Users/luca/Laputa/type/event.md': `---
+Is A: Type
+---
+
+# Event
+
+A **point-in-time occurrence** — meetings, launches, milestones. Events are linked to the entities they relate to.
+
+## Properties
+- **Related to**: Entities this event is about
+`,
+  '/Users/luca/Laputa/type/topic.md': `---
+Is A: Type
+---
+
+# Topic
+
+A **subject area** for categorization. Topics group related notes, projects, and resources by theme.
+
+## Properties
+- **Aliases**: Alternative names
+`,
+  '/Users/luca/Laputa/type/essay.md': `---
+Is A: Type
+---
+
+# Essay
+
+A **published piece of writing** — newsletter essays, blog posts, articles. Essays belong to a responsibility and may relate to topics.
+
+## Properties
+- **Belongs to**: Usually a Responsibility
+`,
+  '/Users/luca/Laputa/type/note.md': `---
+Is A: Type
+---
+
+# Note
+
+A **general-purpose document** — research notes, meeting notes, strategy docs. Notes belong to projects or responsibilities.
+
+## Properties
+- **Belongs to**: A Project, Responsibility, or other parent
+`,
 }
 
 const MOCK_ENTRIES: VaultEntry[] = [
@@ -463,6 +570,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     relationships: {
       'Belongs to': ['[[quarter/q1-2026]]'],
       'Related to': ['[[topic/software-development]]'],
+      'Type': ['[[type/project]]'],
     },
   },
   {
@@ -488,6 +596,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
       ],
       'Topics': ['[[topic/growth]]', '[[topic/writing]]'],
       'Related to': ['[[topic/growth]]'],
+      'Type': ['[[type/responsibility]]'],
     },
   },
   {
@@ -507,6 +616,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     snippet: 'Revenue stream from newsletter sponsorships. Matteo Cellini handles day-to-day operations.',
     relationships: {
       'Owner': ['[[person/matteo-cellini|Matteo Cellini]]'],
+      'Type': ['[[type/responsibility]]'],
     },
   },
   {
@@ -526,6 +636,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     snippet: 'Monday: Pick topic, outline Tuesday: First draft Wednesday: Edit and polish Thursday: Schedule for Tuesday send',
     relationships: {
       'Belongs to': ['[[responsibility/grow-newsletter]]'],
+      'Type': ['[[type/procedure]]'],
     },
   },
   {
@@ -545,6 +656,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     snippet: 'Review pipeline in CRM Follow up with pending proposals Schedule confirmed sponsors Send performance reports to completed sponsors',
     relationships: {
       'Belongs to': ['[[responsibility/manage-sponsorships]]'],
+      'Type': ['[[type/procedure]]'],
     },
   },
   {
@@ -565,6 +677,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     relationships: {
       'Related to': ['[[topic/trading]]', '[[topic/algorithmic-trading]]'],
       'Has Data': ['[[data/ema200-backtest-results]]'],
+      'Type': ['[[type/experiment]]'],
     },
   },
   {
@@ -585,6 +698,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     relationships: {
       'Belongs to': ['[[project/26q1-laputa-app]]'],
       'Related to': ['[[topic/growth]]', '[[topic/ads]]'],
+      'Type': ['[[type/note]]'],
     },
   },
   {
@@ -604,6 +718,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     snippet: 'Under budget on ads due to improved targeting efficiency Consider reallocating savings to content production',
     relationships: {
       'Belongs to': ['[[project/26q1-laputa-app]]'],
+      'Type': ['[[type/note]]'],
     },
   },
   {
@@ -621,7 +736,9 @@ const MOCK_ENTRIES: VaultEntry[] = [
     createdAt: null,
     fileSize: 320,
     snippet: 'Sponsorship manager — handles all sponsor relationships, proposals, and reporting.',
-    relationships: {},
+    relationships: {
+      'Type': ['[[type/person]]'],
+    },
   },
   {
     path: '/Users/luca/Laputa/event/2026-02-14-laputa-app-kickoff.md',
@@ -640,6 +757,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     snippet: 'Agreed on four-panel layout inspired by Bear Notes CodeMirror 6 for the editor — live preview is critical MVP by end of Q1.',
     relationships: {
       'Related to': ['[[project/26q1-laputa-app]]', '[[person/matteo-cellini]]'],
+      'Type': ['[[type/event]]'],
     },
   },
   {
@@ -659,6 +777,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     snippet: 'A broad topic covering everything from frontend to systems programming.',
     relationships: {
       'Notes': ['[[note/facebook-ads-strategy]]', '[[note/budget-allocation]]'],
+      'Type': ['[[type/topic]]'],
     },
   },
   {
@@ -678,6 +797,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     snippet: 'Technical analysis (EMA, RSI, volume patterns) Algorithmic screening and alerts Risk management and position sizing',
     relationships: {
       'Notes': ['[[experiment/stock-screener]]'],
+      'Type': ['[[type/topic]]'],
     },
   },
   {
@@ -697,6 +817,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     snippet: 'Good writing is lean and confident. Every sentence should serve a purpose.',
     relationships: {
       'Belongs to': ['[[responsibility/grow-newsletter]]'],
+      'Type': ['[[type/essay]]'],
     },
   },
   {
@@ -717,6 +838,7 @@ const MOCK_ENTRIES: VaultEntry[] = [
     relationships: {
       'Belongs to': ['[[responsibility/grow-newsletter]]'],
       'Related to': ['[[topic/software-development]]'],
+      'Type': ['[[type/essay]]'],
     },
   },
   {
@@ -736,7 +858,162 @@ const MOCK_ENTRIES: VaultEntry[] = [
     snippet: 'AI agents are autonomous systems that can plan, execute, and adapt to achieve goals.',
     relationships: {
       'Belongs to': ['[[responsibility/grow-newsletter]]'],
+      'Type': ['[[type/essay]]'],
     },
+  },
+  // --- Type documents ---
+  {
+    path: '/Users/luca/Laputa/type/project.md',
+    filename: 'project.md',
+    title: 'Project',
+    isA: 'Type',
+    aliases: [],
+    belongsTo: [],
+    relatedTo: [],
+    status: null,
+    owner: null,
+    cadence: null,
+    modifiedAt: Date.now() / 1000 - 86400 * 90,
+    createdAt: null,
+    fileSize: 320,
+    snippet: 'A time-bound initiative that advances a Responsibility. Projects have a clear start, end, and deliverables.',
+    relationships: {},
+  },
+  {
+    path: '/Users/luca/Laputa/type/responsibility.md',
+    filename: 'responsibility.md',
+    title: 'Responsibility',
+    isA: 'Type',
+    aliases: [],
+    belongsTo: [],
+    relatedTo: [],
+    status: null,
+    owner: null,
+    cadence: null,
+    modifiedAt: Date.now() / 1000 - 86400 * 90,
+    createdAt: null,
+    fileSize: 280,
+    snippet: 'An ongoing area of ownership — something you\'re accountable for indefinitely.',
+    relationships: {},
+  },
+  {
+    path: '/Users/luca/Laputa/type/procedure.md',
+    filename: 'procedure.md',
+    title: 'Procedure',
+    isA: 'Type',
+    aliases: [],
+    belongsTo: [],
+    relatedTo: [],
+    status: null,
+    owner: null,
+    cadence: null,
+    modifiedAt: Date.now() / 1000 - 86400 * 90,
+    createdAt: null,
+    fileSize: 310,
+    snippet: 'A recurring process tied to a Responsibility. Procedures have a cadence and describe how to do something.',
+    relationships: {},
+  },
+  {
+    path: '/Users/luca/Laputa/type/experiment.md',
+    filename: 'experiment.md',
+    title: 'Experiment',
+    isA: 'Type',
+    aliases: [],
+    belongsTo: [],
+    relatedTo: [],
+    status: null,
+    owner: null,
+    cadence: null,
+    modifiedAt: Date.now() / 1000 - 86400 * 90,
+    createdAt: null,
+    fileSize: 290,
+    snippet: 'A hypothesis-driven investigation with a clear test and measurable outcome.',
+    relationships: {},
+  },
+  {
+    path: '/Users/luca/Laputa/type/person.md',
+    filename: 'person.md',
+    title: 'Person',
+    isA: 'Type',
+    aliases: [],
+    belongsTo: [],
+    relatedTo: [],
+    status: null,
+    owner: null,
+    cadence: null,
+    modifiedAt: Date.now() / 1000 - 86400 * 90,
+    createdAt: null,
+    fileSize: 200,
+    snippet: 'A person you interact with — team members, collaborators, contacts.',
+    relationships: {},
+  },
+  {
+    path: '/Users/luca/Laputa/type/event.md',
+    filename: 'event.md',
+    title: 'Event',
+    isA: 'Type',
+    aliases: [],
+    belongsTo: [],
+    relatedTo: [],
+    status: null,
+    owner: null,
+    cadence: null,
+    modifiedAt: Date.now() / 1000 - 86400 * 90,
+    createdAt: null,
+    fileSize: 180,
+    snippet: 'A point-in-time occurrence — meetings, launches, milestones.',
+    relationships: {},
+  },
+  {
+    path: '/Users/luca/Laputa/type/topic.md',
+    filename: 'topic.md',
+    title: 'Topic',
+    isA: 'Type',
+    aliases: [],
+    belongsTo: [],
+    relatedTo: [],
+    status: null,
+    owner: null,
+    cadence: null,
+    modifiedAt: Date.now() / 1000 - 86400 * 90,
+    createdAt: null,
+    fileSize: 170,
+    snippet: 'A subject area for categorization. Topics group related notes, projects, and resources by theme.',
+    relationships: {},
+  },
+  {
+    path: '/Users/luca/Laputa/type/essay.md',
+    filename: 'essay.md',
+    title: 'Essay',
+    isA: 'Type',
+    aliases: [],
+    belongsTo: [],
+    relatedTo: [],
+    status: null,
+    owner: null,
+    cadence: null,
+    modifiedAt: Date.now() / 1000 - 86400 * 90,
+    createdAt: null,
+    fileSize: 200,
+    snippet: 'A published piece of writing — newsletter essays, blog posts, articles.',
+    relationships: {},
+  },
+  {
+    path: '/Users/luca/Laputa/type/note.md',
+    filename: 'note.md',
+    title: 'Note',
+    isA: 'Type',
+    aliases: [],
+    belongsTo: [],
+    relatedTo: [],
+    status: null,
+    owner: null,
+    cadence: null,
+    modifiedAt: Date.now() / 1000 - 86400 * 90,
+    createdAt: null,
+    fileSize: 190,
+    snippet: 'A general-purpose document — research notes, meeting notes, strategy docs.',
+    relationships: {},
   },
 ]
 
