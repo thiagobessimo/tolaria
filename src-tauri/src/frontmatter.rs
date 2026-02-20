@@ -13,53 +13,59 @@ pub enum FrontmatterValue {
     Null,
 }
 
+/// Check whether a YAML string value needs quoting to avoid ambiguity.
+fn needs_yaml_quoting(s: &str) -> bool {
+    let has_special_chars = s.contains(':') || s.contains('#') || s.contains('\n');
+    let starts_with_collection = s.starts_with('[') || s.starts_with('{');
+    let is_reserved_word = s == "true" || s == "false" || s == "null";
+    let looks_like_number = s.parse::<f64>().is_ok();
+    has_special_chars || starts_with_collection || is_reserved_word || looks_like_number
+}
+
+/// Quote a string value for YAML, escaping internal double quotes.
+fn quote_yaml_string(s: &str) -> String {
+    format!("\"{}\"", s.replace('\"', "\\\""))
+}
+
+/// Format a single YAML list item as `  - "value"`.
+fn format_list_item(item: &str) -> String {
+    format!("  - {}", quote_yaml_string(item))
+}
+
+/// Format a number for YAML (integers without decimal, floats with).
+fn format_yaml_number(n: f64) -> String {
+    if n.fract() == 0.0 {
+        format!("{}", n as i64)
+    } else {
+        format!("{}", n)
+    }
+}
+
 impl FrontmatterValue {
     pub fn to_yaml_value(&self) -> String {
         match self {
             FrontmatterValue::String(s) => {
-                if s.contains(':') || s.contains('#') || s.contains('\n') || 
-                   s.starts_with('[') || s.starts_with('{') ||
-                   s == "true" || s == "false" || s == "null" ||
-                   s.parse::<f64>().is_ok() {
-                    format!("\"{}\"", s.replace('\"', "\\\""))
-                } else {
-                    s.clone()
-                }
+                if needs_yaml_quoting(s) { quote_yaml_string(s) } else { s.clone() }
             }
-            FrontmatterValue::Number(n) => {
-                if n.fract() == 0.0 {
-                    format!("{}", *n as i64)
-                } else {
-                    format!("{}", n)
-                }
-            }
+            FrontmatterValue::Number(n) => format_yaml_number(*n),
             FrontmatterValue::Bool(b) => if *b { "true" } else { "false" }.to_string(),
+            FrontmatterValue::List(items) if items.is_empty() => "[]".to_string(),
             FrontmatterValue::List(items) => {
-                if items.is_empty() {
-                    "[]".to_string()
-                } else {
-                    items.iter()
-                        .map(|item| {
-                            let quoted = if item.contains(':') || item.starts_with('[') || item.starts_with('{') {
-                                format!("\"{}\"", item.replace('\"', "\\\""))
-                            } else {
-                                format!("\"{}\"", item)
-                            };
-                            format!("  - {}", quoted)
-                        })
-                        .collect::<Vec<_>>()
-                        .join("\n")
-                }
+                items.iter().map(|item| format_list_item(item)).collect::<Vec<_>>().join("\n")
             }
             FrontmatterValue::Null => "null".to_string(),
         }
     }
 }
 
+/// Check whether a YAML key needs quoting (contains spaces, special chars, etc.).
+fn needs_key_quoting(key: &str) -> bool {
+    key.chars().any(|c| !c.is_ascii_alphanumeric() && c != '_' && c != '-')
+}
+
 /// Format a key for YAML output (quote if necessary)
 pub fn format_yaml_key(key: &str) -> String {
-    if key.contains(' ') || key.contains(':') || key.contains('#') || 
-       key.chars().any(|c| !c.is_ascii_alphanumeric() && c != '_' && c != '-') {
+    if needs_key_quoting(key) {
         format!("\"{}\"", key)
     } else {
         key.to_string()
