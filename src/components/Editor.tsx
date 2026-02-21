@@ -353,6 +353,15 @@ export const Editor = memo(function Editor({
     tabPathsRef.current = currentPaths
   }, [tabs])
 
+  // Focus editor when a new note is created (signaled via custom event)
+  useEffect(() => {
+    const handler = () => {
+      setTimeout(() => editor.focus(), 150)
+    }
+    window.addEventListener('laputa:focus-editor', handler)
+    return () => window.removeEventListener('laputa:focus-editor', handler)
+  }, [editor])
+
   const activeTab = tabs.find((t) => t.entry.path === activeTabPath) ?? null
   const isLoadingNewTab = activeTabPath !== null && !activeTab
   const showDiffToggle = activeTab && isModified?.(activeTab.entry.path)

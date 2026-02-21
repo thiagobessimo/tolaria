@@ -1,16 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { NoteList } from './components/NoteList'
 import { Editor } from './components/Editor'
 import { ResizeHandle } from './components/ResizeHandle'
-import { CreateNoteDialog } from './components/CreateNoteDialog'
 import { CreateTypeDialog } from './components/CreateTypeDialog'
 import { QuickOpenPalette } from './components/QuickOpenPalette'
 import { Toast } from './components/Toast'
 import { CommitDialog } from './components/CommitDialog'
 import { StatusBar } from './components/StatusBar'
 import { useVaultLoader } from './hooks/useVaultLoader'
-import { useNoteActions } from './hooks/useNoteActions'
+import { useNoteActions, generateUntitledName } from './hooks/useNoteActions'
 import { useAppKeyboard } from './hooks/useAppKeyboard'
 import { isTauri } from './mock-tauri'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
@@ -37,12 +36,6 @@ const VAULTS = isTauri()
       { label: 'Demo v2', path: '/Users/luca/Workspace/laputa-app/demo-vault-v2' },
     ]
 
-const BUILT_IN_TYPE_NAMES = new Set([
-  'Project', 'Experiment', 'Responsibility', 'Procedure',
-  'Person', 'Event', 'Topic', 'Type', 'Note', 'Essay',
-  'Quarter', 'Journal', 'Evergreen',
-])
-
 function App() {
   const [selection, setSelection] = useState<SidebarSelection>(DEFAULT_SELECTION)
   const [sidebarWidth, setSidebarWidth] = useState(250)
@@ -50,8 +43,6 @@ function App() {
   const [inspectorWidth, setInspectorWidth] = useState(280)
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false)
   const [gitHistory, setGitHistory] = useState<GitCommit[]>([])
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [createNoteDefaultType, setCreateNoteDefaultType] = useState<string | undefined>()
   const [showCreateTypeDialog, setShowCreateTypeDialog] = useState(false)
   const [showQuickOpen, setShowQuickOpen] = useState(false)
   const [showCommitDialog, setShowCommitDialog] = useState(false)
@@ -62,14 +53,12 @@ function App() {
   const vault = useVaultLoader(vaultPath)
   const notes = useNoteActions(vault.addEntry, vault.updateContent, vault.entries, setToastMessage)
 
-  // Derive custom types from vault (Type entries not in built-in list)
-  const customTypes = useMemo(
-    () => vault.entries
-      .filter((e) => e.isA === 'Type' && !BUILT_IN_TYPE_NAMES.has(e.title))
-      .map((e) => e.title)
-      .sort(),
-    [vault.entries],
-  )
+  // Immediate note creation — no dialog, just create and open
+  const handleCreateNoteImmediate = useCallback((type?: string) => {
+    const noteType = type || 'Note'
+    notes.handleCreateNote(generateUntitledName(vault.entries, noteType), noteType)
+    window.dispatchEvent(new CustomEvent('laputa:focus-editor'))
+  }, [vault.entries, notes])
 
   // Reset UI state when vault changes
   const handleSwitchVault = useCallback((path: string) => {
@@ -87,11 +76,6 @@ function App() {
     }
     vault.loadGitHistory(notes.activeTabPath).then(setGitHistory)
   }, [notes.activeTabPath, vault.loadGitHistory])
-
-  const openCreateDialog = useCallback((type?: string) => {
-    setCreateNoteDefaultType(type)
-    setShowCreateDialog(true)
-  }, [])
 
   const openCreateTypeDialog = useCallback(() => {
     setShowCreateTypeDialog(true)
@@ -138,7 +122,7 @@ function App() {
 
   useAppKeyboard({
     onQuickOpen: () => setShowQuickOpen(true),
-    onCreateNote: openCreateDialog,
+    onCreateNote: handleCreateNoteImmediate,
     onSave: () => setToastMessage('Saved'),
     onTrashNote: handleTrashNote,
     activeTabPathRef: notes.activeTabPathRef,
@@ -186,11 +170,11 @@ function App() {
     <div className="app-shell">
       <div className="app">
         <div className="app__sidebar" style={{ width: sidebarWidth }}>
-          <Sidebar entries={vault.entries} selection={selection} onSelect={setSelection} onSelectNote={notes.handleSelectNote} onCreateType={openCreateDialog} onCreateNewType={openCreateTypeDialog} onCustomizeType={handleCustomizeType} onReorderSections={handleReorderSections} modifiedCount={vault.modifiedFiles.length} onCommitPush={() => setShowCommitDialog(true)} />
+          <Sidebar entries={vault.entries} selection={selection} onSelect={setSelection} onSelectNote={notes.handleSelectNote} onCreateType={handleCreateNoteImmediate} onCreateNewType={openCreateTypeDialog} onCustomizeType={handleCustomizeType} onReorderSections={handleReorderSections} modifiedCount={vault.modifiedFiles.length} onCommitPush={() => setShowCommitDialog(true)} />
         </div>
         <ResizeHandle onResize={handleSidebarResize} />
         <div className="app__note-list" style={{ width: noteListWidth }}>
-          <NoteList entries={vault.entries} selection={selection} selectedNote={activeTab?.entry ?? null} allContent={vault.allContent} modifiedFiles={vault.modifiedFiles} onSelectNote={notes.handleSelectNote} onCreateNote={openCreateDialog} />
+          <NoteList entries={vault.entries} selection={selection} selectedNote={activeTab?.entry ?? null} allContent={vault.allContent} modifiedFiles={vault.modifiedFiles} onSelectNote={notes.handleSelectNote} onCreateNote={handleCreateNoteImmediate} />
         </div>
         <ResizeHandle onResize={handleNoteListResize} />
         <div className="app__editor">
@@ -204,7 +188,7 @@ function App() {
             onNavigateWikilink={notes.handleNavigateWikilink}
             onLoadDiff={vault.loadDiff}
             isModified={vault.isFileModified}
-            onCreateNote={openCreateDialog}
+            onCreateNote={handleCreateNoteImmediate}
             inspectorCollapsed={inspectorCollapsed}
             onToggleInspector={() => setInspectorCollapsed((c) => !c)}
             inspectorWidth={inspectorWidth}
@@ -231,13 +215,6 @@ function App() {
         entries={vault.entries}
         onSelect={notes.handleSelectNote}
         onClose={() => setShowQuickOpen(false)}
-      />
-      <CreateNoteDialog
-        open={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
-        onCreate={notes.handleCreateNote}
-        defaultType={createNoteDefaultType}
-        customTypes={customTypes}
       />
       <CreateTypeDialog
         open={showCreateTypeDialog}

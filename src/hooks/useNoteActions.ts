@@ -89,6 +89,19 @@ function deleteMockFrontmatterProperty(path: string, key: string): string {
   return `---\n${newLines.join('\n')}\n---${rest}`
 }
 
+/** Generate a unique "Untitled <type>" name by checking existing entries. */
+export function generateUntitledName(entries: VaultEntry[], type: string): string {
+  const baseName = `Untitled ${type.toLowerCase()}`
+  const existingTitles = new Set(entries.map(e => e.title))
+  let title = baseName
+  let counter = 2
+  while (existingTitles.has(title)) {
+    title = `${baseName} ${counter}`
+    counter++
+  }
+  return title
+}
+
 const TAB_ORDER_KEY = 'laputa-tab-order'
 
 function saveTabOrder(tabs: Tab[]) {
