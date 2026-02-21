@@ -164,26 +164,28 @@ export const Editor = memo(function Editor({
   const editor = useCreateBlockNote({
     schema,
     uploadFile: async (file: File) => {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = () => reject(reader.error)
-        reader.readAsDataURL(file)
-      })
+      // Use blob URL for immediate display — lightweight and avoids encoding large files as data URLs
+      const blobUrl = URL.createObjectURL(file)
 
-      // In Tauri mode, also persist the file to the vault's attachments directory
+      // In Tauri mode, persist the file to the vault's attachments directory (fire-and-forget)
       if (isTauri() && vaultPathRef.current) {
-        const base64 = dataUrl.split(',')[1]
-        if (base64) {
-          invoke('save_image', {
-            vaultPath: vaultPathRef.current,
-            filename: file.name,
-            data: base64,
-          }).catch(err => console.warn('Failed to save image to vault:', err))
-        }
+        const vaultPath = vaultPathRef.current
+        file.arrayBuffer().then(buf => {
+          const bytes = new Uint8Array(buf)
+          let binary = ''
+          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+          const base64 = btoa(binary)
+          if (base64) {
+            invoke('save_image', {
+              vaultPath,
+              filename: file.name,
+              data: base64,
+            }).catch(err => console.warn('Failed to save image to vault:', err))
+          }
+        }).catch(err => console.warn('Failed to read image for vault save:', err))
       }
 
-      return dataUrl
+      return blobUrl
     },
   })
   // Cache parsed blocks per tab path for instant switching

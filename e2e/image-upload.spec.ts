@@ -11,81 +11,56 @@ function createTestPng(filepath: string) {
   fs.writeFileSync(filepath, Buffer.from(TEST_PNG_BASE64, 'base64'))
 }
 
-test('image upload via slash menu inserts image block', async ({ page }) => {
+test('image upload via file picker displays image with blob URL', async ({ page }) => {
   await page.goto('/')
   await page.waitForTimeout(1000)
 
-  // Click first note item (each note card has a type-icon data-testid)
-  const noteItem = page.locator('[data-testid="type-icon"]').first()
-  await noteItem.click({ timeout: 10000 })
+  // Open a note
+  await page.locator('[data-testid="type-icon"]').first().click({ timeout: 10000 })
   await page.waitForTimeout(500)
 
-  // Screenshot before image upload
-  await page.screenshot({ path: 'test-results/image-upload-before.png', fullPage: true })
-
-  // Click into the editor to focus it
   const editor = page.locator('.bn-editor')
   await expect(editor).toBeVisible({ timeout: 10000 })
   await editor.click()
   await page.waitForTimeout(200)
 
-  // Press Enter to create a new line, then type /image to open slash menu
+  // Insert image block via slash command
   await page.keyboard.press('Enter')
   await page.waitForTimeout(100)
-  await page.keyboard.type('/image', { delay: 50 })
+  await page.keyboard.type('/image', { delay: 80 })
   await page.waitForTimeout(500)
 
-  // Screenshot showing slash menu with image option
-  await page.screenshot({ path: 'test-results/image-slash-menu.png', fullPage: true })
+  // Select Image from slash menu (press Enter to pick first match)
+  await page.keyboard.press('Enter')
+  await page.waitForTimeout(500)
 
-  // Look for Image item in the slash menu
-  const imageMenuItem = page.locator('[class*="suggestionMenu"] [class*="item"]', { hasText: 'Image' }).first()
-  const menuVisible = await imageMenuItem.isVisible({ timeout: 3000 }).catch(() => false)
+  // Verify Upload tab is available (uploadFile is configured)
+  const fileInput = page.locator('input[type="file"]')
+  expect(await fileInput.count()).toBeGreaterThan(0)
 
-  if (menuVisible) {
-    await imageMenuItem.click()
-    await page.waitForTimeout(500)
+  // Upload a test image
+  const testImagePath = path.join(process.cwd(), 'test-results', 'test-image.png')
+  createTestPng(testImagePath)
 
-    // After inserting image block, look for upload tab/button
-    const uploadTab = page.getByText(/upload/i).first()
-    const uploadVisible = await uploadTab.isVisible({ timeout: 3000 }).catch(() => false)
+  await fileInput.first().setInputFiles(testImagePath)
+  await page.waitForTimeout(2000)
 
-    if (uploadVisible) {
-      await uploadTab.click()
-      await page.waitForTimeout(200)
+  // Verify: image element exists in the editor
+  const images = page.locator('.bn-editor img')
+  const imageCount = await images.count()
+  expect(imageCount).toBeGreaterThan(0)
 
-      // Create a test image file
-      const testImagePath = path.join(__dirname, '..', 'test-results', 'test-image.png')
-      createTestPng(testImagePath)
+  // Verify: image uses blob URL (not stuck on empty or data URL)
+  const src = await images.first().getAttribute('src')
+  expect(src).toMatch(/^blob:/)
 
-      // Try to upload via input[type=file] or file chooser
-      const uploadInput = page.locator('input[type="file"]').first()
-      if (await uploadInput.count() > 0) {
-        await uploadInput.setInputFiles(testImagePath)
-      } else {
-        const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 5000 })
-        const uploadBtn = page.locator('button', { hasText: /upload|choose|browse/i }).first()
-        if (await uploadBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
-          await uploadBtn.click()
-          const fileChooser = await fileChooserPromise
-          await fileChooser.setFiles(testImagePath)
-        }
-      }
+  // Verify: no "Loading..." elements remain
+  const loadingEls = page.locator('.bn-file-loading-preview')
+  expect(await loadingEls.count()).toBe(0)
 
-      await page.waitForTimeout(1000)
-
-      // Verify an image is now displayed in the editor
-      const imageInEditor = page.locator('.bn-editor img')
-      const imageCount = await imageInEditor.count()
-      console.log(`Images found in editor after upload: ${imageCount}`)
-
-      // Clean up test image
-      if (fs.existsSync(testImagePath)) fs.unlinkSync(testImagePath)
-    }
-  }
-
-  // Screenshot after image upload attempt
   await page.screenshot({ path: 'test-results/image-upload-after.png', fullPage: true })
+
+  if (fs.existsSync(testImagePath)) fs.unlinkSync(testImagePath)
 })
 
 test('editor has uploadFile configured (no error on image block insert)', async ({ page }) => {
@@ -93,8 +68,7 @@ test('editor has uploadFile configured (no error on image block insert)', async 
   await page.waitForTimeout(1000)
 
   // Click first note
-  const noteItem = page.locator('[data-testid="type-icon"]').first()
-  await noteItem.click({ timeout: 10000 })
+  await page.locator('[data-testid="type-icon"]').first().click({ timeout: 10000 })
   await page.waitForTimeout(500)
 
   const editor = page.locator('.bn-editor')
@@ -110,12 +84,9 @@ test('editor has uploadFile configured (no error on image block insert)', async 
   await page.keyboard.type('/image', { delay: 30 })
   await page.waitForTimeout(500)
 
-  // Click Image in the slash menu if visible
-  const imageMenuItem = page.locator('[class*="suggestionMenu"] [class*="item"]', { hasText: 'Image' }).first()
-  if (await imageMenuItem.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await imageMenuItem.click()
-    await page.waitForTimeout(500)
-  }
+  // Press Enter to select Image
+  await page.keyboard.press('Enter')
+  await page.waitForTimeout(500)
 
   await page.screenshot({ path: 'test-results/image-block-inserted.png', fullPage: true })
 
