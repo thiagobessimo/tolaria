@@ -29,12 +29,17 @@ function InlineTabEdit({ initialValue, onSave, onCancel }: {
 }) {
   const [value, setValue] = useState(initialValue)
   const inputRef = useRef<HTMLInputElement>(null)
+  // Guard against double-fire: Enter calls handleSave, then React unmounts
+  // the input (editingPath → null), which triggers blur → handleSave again.
+  const committedRef = useRef(false)
 
   useEffect(() => {
     inputRef.current?.select()
   }, [])
 
   const handleSave = useCallback(() => {
+    if (committedRef.current) return
+    committedRef.current = true
     const trimmed = value.trim()
     if (trimmed && trimmed !== initialValue) {
       onSave(trimmed)
