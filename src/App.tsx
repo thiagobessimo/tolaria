@@ -14,6 +14,7 @@ import { useVaultLoader } from './hooks/useVaultLoader'
 import { useSettings } from './hooks/useSettings'
 import { useNoteActions, generateUntitledName } from './hooks/useNoteActions'
 import { useAppKeyboard } from './hooks/useAppKeyboard'
+import { useViewMode } from './hooks/useViewMode'
 import { useEntryActions } from './hooks/useEntryActions'
 import { isTauri } from './mock-tauri'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
@@ -129,6 +130,8 @@ function App() {
     notes.handleRenameNote(path, newTitle, vaultPath, vault.replaceEntry)
   }, [notes, vaultPath, vault])
 
+  const { setViewMode } = useViewMode()
+
   useAppKeyboard({
     onQuickOpen: () => setShowQuickOpen(true),
     onCreateNote: handleCreateNoteImmediate,
@@ -136,6 +139,7 @@ function App() {
     onOpenSettings: () => setShowSettings(true),
     onTrashNote: entryActions.handleTrashNote,
     onArchiveNote: entryActions.handleArchiveNote,
+    onSetViewMode: setViewMode,
     activeTabPathRef: notes.activeTabPathRef,
     handleCloseTabRef: notes.handleCloseTabRef,
   })

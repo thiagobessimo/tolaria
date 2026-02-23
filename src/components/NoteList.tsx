@@ -185,7 +185,7 @@ function useNoteListData({ entries, selection, allContent, query, listSort, list
 
   const searched = useMemo(() => {
     if (isEntityView) return []
-    const sorted = [...filterEntries(entries, selection, modifiedFiles)].sort(getSortComparator(listSort, listDirection))
+    const sorted = [...filterEntries(entries, selection)].sort(getSortComparator(listSort, listDirection))
     return filterByQuery(sorted, query)
   }, [entries, selection, modifiedFiles, isEntityView, listSort, listDirection, query])
 
