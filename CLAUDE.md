@@ -10,7 +10,7 @@ pnpm test                           # unit tests
 pnpm test:coverage                  # frontend ≥70% coverage
 cargo test                          # Rust tests
 cargo llvm-cov --manifest-path src-tauri/Cargo.toml --fail-under-lines 85
-pre_commit_code_health_safeguard    # CodeScene ≥8.5 — if it fails, fix structurally (see below)
+pre_commit_code_health_safeguard    # CodeScene ≥9.2 — if it fails, fix structurally (see below)
 ```
 
 **CI is a safety net, not a discovery tool.** If CI catches something you didn't catch locally, that's a process failure. All these tools are available locally — use them while you code, not just at the end.
